@@ -18,24 +18,26 @@ object Core {
      */
     object CacheCommand {
 
-      val CmdParser = "([^ ]+)\\s?([^ ]+)?\\s?(.*)".r;
+      val CmdParserRE = "([^ ]+)\\s?([^ ]+)?\\s?(.*)".r;
       
       //constructor simple
       def apply(word:String, key:String, value:String, fnc:(String, String)=>String) = new CacheCommand(word, key, value, fnc)
+      def apply(word:String, key:String, fnc:(String, String)=>String) = new CacheCommand(word, key, null, fnc)
+      def apply(word:String, fnc:(String, String)=>String) = new CacheCommand(word, null, null, fnc)
 
       //splitea el string y decide la funcion
       def apply(str:String) : CacheCommand = str match  {
-        case CmdParser(word, key, value) => word toLowerCase match {
+        case CmdParserRE(word, key, value) => word toLowerCase match {
           case "set" => CacheCommand(word, key, value, (k:String,v:String)=> {cache +=(k->v); "STORED"} )
-          case "get" => CacheCommand(word, key, value, (k:String,v:String)=> {"VALUE " + cache.getOrElse(k, "")} )
-          case "list" => CacheCommand(word, key, value, (k:String,v:String)=> {
+          case "get" => CacheCommand(word, key, (k:String,v:String)=> {"VALUE " + cache.getOrElse(k, "")} )
+          case "list" => CacheCommand(word, (k:String,v:String)=> {
             cache.foldLeft("")( (acc, kv) => acc + "TUPLE " + kv._1 + " " + kv._2 + "\r\n")
           } )
-          case "size" => CacheCommand(word, key, value, (k:String,v:String)=> { "TUPLES " + cache.size} )
+          case "size" => CacheCommand(word, (k:String,v:String)=> { "TUPLES " + cache.size} )
           case default => CacheCommand(word, key, value, "cmd: k " + _ + ", v" + _ )
         }
-        case "" => CacheCommand("ERROR", "", "", (k:String,v:String)=>"ERROR" ) 
-        case nop => CacheCommand("ERROR", "", "", (k:String,v:String)=>"ERROR:" + str)
+        case "" => CacheCommand("ERROR", (k:String,v:String)=>"ERROR" ) 
+        case nop => CacheCommand("ERROR", (k:String,v:String)=>"ERROR:" + str)
       
       }
 
