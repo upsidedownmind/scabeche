@@ -30,6 +30,7 @@ object Core {
         case CmdParserRE(word, key, value) => word toLowerCase match {
           case "set" => CacheCommand(word, key, value, (k:String,v:String)=> {cache +=(k->v); "STORED"} )
           case "get" => CacheCommand(word, key, (k:String,v:String)=> {"VALUE " + cache.getOrElse(k, "")} )
+          case "remove" => CacheCommand(word, key, (k:String,v:String)=> {cache -= k; "REMOVED"} )
           case "list" => CacheCommand(word, (k:String,v:String)=> {
             cache.foldLeft("")( (acc, kv) => acc + "TUPLE " + kv._1 + " " + kv._2 + "\r\n")
           } )
